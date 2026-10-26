@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Word Reverser – DSA Stack Project</title>
+<style>
+:root{--bg:#fbf3e4;--card:#fffaf0;--ink:#2b2118;--muted:#76675a;--line:#e0cfb4;--accent:#1f6f8b;--hi:#e4572e}
+@media (prefers-color-scheme:dark){:root{--bg:#1b1713;--card:#262019;--ink:#f3e9da;--muted:#b5a592;--line:#42392d;--accent:#6cc4e3;--hi:#ff8a65}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Georgia,serif;padding:20px}
+main{max-width:800px;margin:0 auto}
+h1{margin:0 0 4px;font-size:1.8rem}
+.sub{color:var(--muted);margin:0 0 18px}
+.box{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:16px;margin-bottom:16px}
+h2{font-size:1.05rem;margin:0 0 10px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
+label{display:flex;flex-direction:column;font-size:.85rem;color:var(--muted);gap:4px}
+input{font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)}
+button{font:inherit;padding:9px 14px;border-radius:6px;border:1px solid var(--accent);background:var(--accent);color:#fff;cursor:pointer}
+@media (prefers-color-scheme:dark){button{color:#08242d}}
+button.alt{background:transparent;color:var(--accent)}
+button:disabled{opacity:.4;cursor:not-allowed}
+button:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.flow{display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start}
+.col{flex:1;min-width:200px}
+.col h3{margin:0 0 8px;font-size:.95rem;color:var(--muted)}
+.letters{display:flex;gap:6px;flex-wrap:wrap;min-height:46px}
+.ch{width:38px;height:38px;border:1px solid var(--line);border-radius:6px;display:grid;place-items:center;font:1.2rem Consolas,monospace;background:var(--bg)}
+.ch.now{border:2px solid var(--hi);color:var(--hi)}
+.ch.done{opacity:.35}
+.stack{display:flex;flex-direction:column-reverse;gap:4px;width:70px;min-height:60px;border:2px solid var(--ink);border-top:none;padding:6px;border-radius:0 0 8px 8px}
+.stack .ch{width:100%}
+.stack .ch.top{border:2px solid var(--accent);color:var(--accent)}
+#says{min-height:3em;color:var(--muted)}
+#result{font:1.6rem Consolas,monospace;min-height:2.2rem;letter-spacing:.1em}
+#msg{min-height:1.4em;margin:8px 0 0;color:var(--hi)}
+</style>
+</head>
+<body>
+<main>
+<h1>Reverse a word</h1>
+<p class="sub">A stack gives back items in the opposite order they went in. Push each letter, then pop them all.</p>
+
+<section class="box">
+<div class="row">
+<label>Word or phrase <input id="word" maxlength="30" placeholder="stack" value="stack"></label>
+<button id="load">Load</button>
+</div>
+<p id="msg" role="status"></p>
+</section>
+
+<section class="box">
+<div class="flow">
+<div class="col"><h3>Input letters</h3><div class="letters" id="input"></div></div>
+<div class="col"><h3>Stack (top is highlighted)</h3><div class="stack" id="stack"></div></div>
+<div class="col"><h3>Output</h3><div id="result" aria-live="polite"></div></div>
+</div>
+<p id="says">Press “Step” to push the first letter.</p>
+<div class="row">
+<button id="step">Step</button>
+<button id="all" class="alt">Run all</button>
+<button id="reset" class="alt">Restart</button>
+</div>
+</section>
+
+<section class="box">
+<h2>Stack operations used</h2>
+<p style="margin:0">Phase 1 pushes every letter in order (O(1) each). Phase 2 pops every letter until the stack is empty (O(1) each). The whole reversal takes O(n) time and O(n) extra space.</p>
+</section>
+</main>
+
+<script>
+// ---- Stack ----
+class Stack {
+  constructor(){ this.items = []; }
+  push(x){ this.items.push(x); }
+  pop(){ return this.items.pop(); }
+  peek(){ return this.items[this.items.length - 1]; }
+  isEmpty(){ return this.items.length === 0; }
+}
+
+const $ = id => document.getElementById(id);
+let letters = [], pushed = 0, st = new Stack(), out = '', phase = 'push';
+
+function load(w){
+  letters = Array.from(w); pushed = 0; st = new Stack(); out = ''; phase = 'push';
+  $('says').textContent = 'Press “Step” to push the first letter.';
+  draw();
+}
+
+function draw(){
+  const inp = $('input'); inp.innerHTML = '';
+  letters.forEach((c, i) => {
+    const d = document.createElement('div');
+    d.className = 'ch' + (i < pushed - 1 || (phase === 'pop' && i === pushed - 1) ? ' done' : i === pushed - 1 ? ' now' : '');
+    d.textContent = c === ' ' ? '␣' : c; inp.append(d);
+  });
+  const s = $('stack'); s.innerHTML = '';
+  st.items.forEach((c, i) => {
+    const d = document.createElement('div');
+    d.className = 'ch' + (i === st.items.length - 1 ? ' top' : '');
+    d.textContent = c === ' ' ? '␣' : c; s.append(d);
+  });
+  $('result').textContent = out;
+  const finished = phase === 'pop' && st.isEmpty();
+  $('step').disabled = finished; $('all').disabled = finished;
+}
+
+function step(){
+  if (phase === 'push'){
+    if (pushed < letters.length){
+      const c = letters[pushed++]; st.push(c);
+      $('says').textContent = `push "${c}" onto the stack.`;
+    }
+    if (pushed === letters.length){ phase = 'pop'; $('says').textContent += ' All letters pushed. Next, pop them one by one.'; }
+  } else if (!st.isEmpty()){
+    const c = st.pop(); out += c;
+    $('says').textContent = `pop "${c}" from the top and add it to the output.` + (st.isEmpty() ? ' Stack is empty. Done!' : '');
+  }
+  draw();
+}
+
+$('step').onclick = step;
+$('all').onclick = () => { while (!(phase === 'pop' && st.isEmpty())) step(); };
+$('reset').onclick = () => load(letters.join(''));
+$('load').onclick = () => {
+  const w = $('word').value;
+  if (!w.trim()){ $('msg').textContent = 'Enter a word or phrase first.'; return; }
+  $('msg').textContent = ''; load(w.trim());
+};
+$('word').addEventListener('keydown', e => { if (e.key === 'Enter') $('load').click(); });
+load('stack');
+</script>
+</body>
+</html>
