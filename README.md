@@ -2,7 +2,7 @@
 
 A web app that reverses any word or phrase and shows every stack operation along the way.
 
-**Live demo:** _paste your GitHub Pages link here_
+**Live demo:** file:///C:/Users/thanish/Downloads/index%20(1).html
 
 ## DSA concept: Stack (LIFO)
 
