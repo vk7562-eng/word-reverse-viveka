@@ -2,8 +2,6 @@
 
 A web app that reverses any word or phrase and shows every stack operation along the way.
 
-**Live demo:** file:///C:/Users/thanish/Downloads/index%20(1).html
-
 ## DSA concept: Stack (LIFO)
 
 A stack removes items in the opposite order they were added (last in, first out), which is exactly what reversing needs:
